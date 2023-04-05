@@ -15,7 +15,7 @@ public class Player
 
     public Player()
     {
-
+        eggBox = new EggBox();
     }
 
     public void generateEggs()
@@ -26,7 +26,9 @@ public class Player
             if (pen.shouldGenerateEgg())
             {
                 Egg egg = pen.generateEgg();
-                eggBox.eggList.add(egg);
+                if (egg != null) {
+                    eggBox.eggList.add(egg);
+                }
             }
         }
     }

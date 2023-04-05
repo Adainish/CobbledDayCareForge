@@ -1,7 +1,10 @@
 package io.github.adainish.cobbleddaycare;
 
 import ca.landonjw.gooeylibs2.api.tasks.Task;
+import io.github.adainish.cobbleddaycare.config.PenConfig;
+import io.github.adainish.cobbleddaycare.config.SpeciesConfig;
 import io.github.adainish.cobbleddaycare.obj.DayCareManager;
+import io.github.adainish.cobbleddaycare.storage.DayCareStorage;
 import io.github.adainish.cobbleddaycare.tasks.UpdatePensRunnable;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
@@ -73,25 +76,88 @@ public class CobbledDayCare {
         CobbledDayCare.storage = storage;
     }
 
+    public static DayCareStorage dayCareStorage;
+
+    public static SpeciesConfig speciesConfig;
+    public static PenConfig penConfig;
+
+    public static Logger getLog() {
+        return log;
+    }
+
+
+
     private void commonSetup(final FMLCommonSetupEvent event) {
-        // Some common setup code
-        initDirs();
+        log.info("Booting up %n by %authors %v %y"
+                .replace("%n", MOD_NAME)
+                .replace("%authors", AUTHORS)
+                .replace("%v", VERSION)
+                .replace("%y", YEAR)
+        );
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event)
     {
-        //check storage, if doesn't exist create new one, otherwise serialise from gson
-        manager = new DayCareManager();
-        taskList.add(Task.builder().infinite().interval(20).execute(new UpdatePensRunnable()).build());
+        reload();
+
     }
 
     public void initDirs() {
-        setConfigDir(new File(FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath()).toString() + "/CobbledDayCare/"));
+        getLog().warn("Writing paths/directories if they don't exist");
+        setConfigDir(new File(FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath()) + "/CobbledDayCare/"));
         getConfigDir().mkdir();
         setStorage(new File(getConfigDir(), "/storage/"));
         getStorage().mkdirs();
+    }
+
+    public void initConfigs() {
+        getLog().warn("Writing and loading config data for breedable species and pens");
+        SpeciesConfig.writeConfig();
+        speciesConfig = SpeciesConfig.getConfig();
+        PenConfig.writeConfig();
+        penConfig = PenConfig.getConfig();
+    }
+
+    public void initStorage()
+    {
+        if (dayCareStorage != null) {
+            dayCareStorage.save();
+        } else {
+            DayCareStorage.writeConfig();
+            dayCareStorage = DayCareStorage.getConfig();
+        }
+
+        if (dayCareStorage != null) {
+            if (dayCareStorage.dayCareManager == null) {
+                dayCareStorage.dayCareManager = new DayCareManager();
+            }
+            manager = dayCareStorage.dayCareManager;
+            manager.loadPenData();
+        } else {
+            getLog().error("Failed to verify storage data, forcefully shut down the server to prevent corruption. Please contact the dev!");
+            System.exit(4);
+        }
+    }
+
+    public void reload() {
+        initDirs();
+        if (!taskList.isEmpty())
+        {
+            getLog().warn("Shutting down old task data");
+            for (Task t:taskList) {
+                t.setExpired();
+            }
+            taskList.clear();
+        }
+        initConfigs();
+
+        //load other data
+        initStorage();
+
+        taskList.add(Task.builder().infinite().interval(20).execute(new UpdatePensRunnable()).build());
+        //whatever other tasks
     }
 
 }

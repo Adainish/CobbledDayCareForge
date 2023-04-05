@@ -1,6 +1,5 @@
 package io.github.adainish.cobbleddaycare.obj;
 
-import com.cobblemon.mod.common.CobblemonItems;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.egg.EggGroup;
 import com.cobblemon.mod.common.pokeball.PokeBall;
@@ -10,8 +9,10 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.google.gson.JsonObject;
 import io.github.adainish.cobbleddaycare.CobbledDayCare;
+import io.github.adainish.cobbleddaycare.config.SpeciesConfig;
 import io.github.adainish.cobbleddaycare.util.RandomHelper;
 import io.github.adainish.cobbleddaycare.util.Util;
+import net.minecraftforge.server.permission.nodes.PermissionNode;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,9 +22,16 @@ public class DayCarePen
     public JsonObject pokemonOne;
     public JsonObject pokemonTwo;
 
+    public int coolDownMinutes = 5;
+    public int eggCoolDown = 5;
     public long lastStart = 0;
 
     public long lastEggAttempt = 0;
+
+    public double unlockCost;
+
+    public String permissionID;
+
 
     public DayCarePen()
     {
@@ -109,33 +117,57 @@ public class DayCarePen
         }
         if (decidedSpecies == null)
             return null;
-
-        int lvl = 1;
-        //ivs data
-        /**
-         * No destiny knots yet, so ivs passing can't yet be implemented
-         */
+        SpeciesConfig speciesConfig = CobbledDayCare.speciesConfig;
+        if (speciesConfig.speciesData.get(maleParent.getSpecies().getName()) != null || speciesConfig.speciesData.get(femaleParent.getSpecies().getName()) != null) {
+            BreedableSpecies father = speciesConfig.speciesData.get(maleParent.getSpecies().getName());
+            BreedableSpecies mother = speciesConfig.speciesData.get(femaleParent.getSpecies().getName());
+            int lvl = 1;
+            //ivs data
+            /**
+             * No destiny knots yet, so ivs passing can't yet be implemented
+             */
 //        parentOne.heldItem().getItem().equals(CobblemonItems.DESTI)
-        boolean shouldBeShiny = RandomHelper.getRandomChance(1);
-        //ball;
-        PokeBall pokeBall = femaleParent.getCaughtBall();
-        //nature
-        Nature nature = RandomHelper.getRandomElementFromCollection(Natures.INSTANCE.all());
-//        if (parentOne.heldItem().getItem().equals(CobblemonItems.EVER_STONE))
-        /**
-         * Ever stones still need to be implemented, nature generation will be random
-         */
-        //size?
-        //form generation
-        //
+            boolean shouldBeShiny = RandomHelper.getRandomChance(mother.shinyChance) || RandomHelper.getRandomChance(father.shinyChance);
+            //ball;
+            PokeBall pokeBall = femaleParent.getCaughtBall();
+            //nature
 
-        Pokemon generated = decidedSpecies.create(lvl);
-        if (nature != null) {
-            generated.setNature(nature);
-        }
-        generated.setShiny(shouldBeShiny);
-        generated.setCaughtBall(pokeBall);
-        return new Egg(generated);
+            //? no is hidden check, can't parse down HA checking
+
+            Nature nature = RandomHelper.getRandomElementFromCollection(Natures.INSTANCE.all());
+            if (RandomHelper.getRandomChance(mother.natureChanceFemale)) {
+                nature = femaleParent.getNature();
+            } else if (RandomHelper.getRandomChance(father.natureChanceMale))
+                nature = maleParent.getNature();
+
+//        if (parentOne.heldItem().getItem().equals(CobblemonItems.EVER_STONE))
+            /**
+             * Ever stones still need to be implemented, nature generation will be random
+             */
+            //size?
+            //form generation
+            //
+
+            Pokemon generated = decidedSpecies.create(lvl);
+            if (nature != null) {
+                generated.setNature(nature);
+            }
+            generated.setShiny(shouldBeShiny);
+            generated.setCaughtBall(pokeBall);
+            return new Egg(generated);
+        } else
+            return null;
+    }
+
+    public boolean breedingOnCoolDown()
+    {
+
+        return false;
+    }
+
+    public void startBreeding()
+    {
+        this.lastStart = System.currentTimeMillis();
     }
 
     public Pokemon getParentOne()
