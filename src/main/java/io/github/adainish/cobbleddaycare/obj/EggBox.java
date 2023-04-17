@@ -37,9 +37,11 @@ public class EggBox
             for (Egg egg : eggList) {
                 if (egg.hasHatched()) {
                     toRemove.add(egg);
-                    store.add(new Pokemon().loadFromJSON(egg.generatedPokemon));
+                    egg.send(store, uuid);
                 }
             }
+        } else {
+            return;
         }
         if (!toRemove.isEmpty()) {
             eggList.removeAll(toRemove);

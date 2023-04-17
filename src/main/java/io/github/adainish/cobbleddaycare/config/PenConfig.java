@@ -14,6 +14,11 @@ public class PenConfig
 
     public HashMap<String, ConfigurableDayCarePen> configurablePens = new HashMap<>();
 
+    public PenConfig()
+    {
+        initDefaultPens();
+    }
+
     public static void writeConfig()
     {
         File dir = CobbledDayCare.getConfigDir();
@@ -50,5 +55,17 @@ public class PenConfig
         }
 
         return gson.fromJson(reader, PenConfig.class);
+    }
+
+    //add default pens
+    public void initDefaultPens()
+    {
+        if (configurablePens.isEmpty())
+        {
+            for (int i = 0; i < 5; i++) {
+                ConfigurableDayCarePen configurableDayCarePen = new ConfigurableDayCarePen(i);
+                this.configurablePens.put(configurableDayCarePen.dayCareID, configurableDayCarePen);
+            }
+        }
     }
 }

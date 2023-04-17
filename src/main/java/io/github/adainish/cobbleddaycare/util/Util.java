@@ -98,72 +98,86 @@ public class Util
         return p;
     }
 
-    public static ArrayList <String> pokemonLore(Pokemon p) {
+    public static int getIntFromStat(Stats stat, Pokemon pokemon, boolean ivs)
+    {
+        int am = 0;
+        if (ivs)
+        {
+            am = pokemon.getIvs().getOrDefault(stat);
+        } else {
+            am = pokemon.getEvs().getOrDefault(stat);
+        }
+        return am;
+    }
+
+    public static ArrayList<String> pokemonLore(Pokemon p) {
         ArrayList<String> list = new ArrayList<>();
         list.add("&7Ball:&e " + p.getCaughtBall().getName().getPath().replace("_", " "));
         list.add("&7Ability:&e " + p.getAbility().getName().toLowerCase());
-        list.add("&7Nature:&e " + p.getNature().getDisplayName());
+        list.add("&7Nature:&e " + p.getNature().getDisplayName().replace("cobblemon", "").replaceAll("\\.", "").replace("nature", ""));
         list.add("&7Gender:&e " + p.getGender().name().toLowerCase());
 
-//        if (p.getPalette().getTexture() != null) {
-//            if (!p.getPalette().getEmissiveTexture()) {
-//                list.add("&5Custom Texture: &b" + p.getCustomTexture());
-//            }
-//        }
-        list.add("&7IVS: (&f%ivs%%&7)".replace("%ivs%", String.valueOf("TBI")));
+        list.add("&7IVS: (&f%ivs%%&7)".replace("%ivs%", String.valueOf(getIVSPercentage(1, p))));
         list.add("&cHP: %hp% &7/ &6Atk: %atk% &7/ &eDef: %def%"
-                .replace("%hp%", String.valueOf(p.getIvs().get(Stats.HP)))
-                .replace("%atk%", String.valueOf(p.getIvs().get(Stats.ATTACK)))
-                .replace("%def%", String.valueOf(p.getIvs().get(Stats.DEFENCE)))
+                .replace("%hp%", String.valueOf(getIntFromStat(Stats.HP, p, true)))
+                .replace("%atk%", String.valueOf(getIntFromStat(Stats.ATTACK, p, true)))
+                .replace("%def%", String.valueOf(getIntFromStat(Stats.DEFENCE, p, true)))
         );
 
         list.add("&9SpA: %spa% &7/ &aSpD: %spd% &7/ &dSpe: %spe%"
-                .replace("%spa%", String.valueOf(p.getIvs().get(Stats.SPECIAL_ATTACK)))
-                .replace("%spd%", String.valueOf(p.getIvs().get(Stats.SPECIAL_DEFENCE)))
-                .replace("%spe%", String.valueOf(p.getIvs().get(Stats.SPEED)))
+                .replace("%spa%", String.valueOf(getIntFromStat(Stats.SPECIAL_ATTACK, p, true)))
+                .replace("%spd%", String.valueOf(getIntFromStat(Stats.SPECIAL_DEFENCE, p, true)))
+                .replace("%spe%", String.valueOf(getIntFromStat(Stats.SPEED, p, true)))
         );
 
         list.add("&7EVS: (&f%evs%%&7)".replace("%evs%", String.valueOf(getEVSPercentage(1, p))));
         list.add("&cHP: %hp% &7/ &6Atk: %atk% &7/ &eDef: %def%"
-                .replace("%hp%", String.valueOf(p.getEvs().get(Stats.HP)))
-                .replace("%atk%", String.valueOf(p.getEvs().get(Stats.HP)))
-                .replace("%def%", String.valueOf(p.getEvs().get(Stats.HP)))
+                .replace("%hp%", String.valueOf(getIntFromStat(Stats.HP, p, false)))
+                .replace("%atk%", String.valueOf(getIntFromStat(Stats.ATTACK, p, false)))
+                .replace("%def%", String.valueOf(getIntFromStat(Stats.DEFENCE, p, false)))
         );
 
         list.add("&9SpA: %spa% &7/ &aSpD: %spd% &7/ &dSpe: %spe%"
-                .replace("%spa%", String.valueOf(p.getEvs().get(Stats.SPECIAL_ATTACK)))
-                .replace("%spd%", String.valueOf(p.getEvs().get(Stats.SPECIAL_DEFENCE)))
-                .replace("%spe%", String.valueOf(p.getEvs().get(Stats.SPEED)))
+                .replace("%spa%", String.valueOf(getIntFromStat(Stats.SPECIAL_ATTACK, p, false)))
+                .replace("%spd%", String.valueOf(getIntFromStat(Stats.SPECIAL_DEFENCE, p, false)))
+                .replace("%spe%", String.valueOf(getIntFromStat(Stats.SPEED, p, false)))
         );
 
 
-        for (Move m:p.getMoveSet().getMoves()) {
+        for (Move m : p.getMoveSet().getMoves()) {
             if (m == null)
                 continue;
-            list.add("&7- " + m.getDisplayName().plainCopy());
+            list.add("&7- " + m.getName());
         }
 
         return list;
     }
 
-    public static int[] getEvsArray(Pokemon p) {
-        return new int[]{p.getEvs().get(Stats.HP),
-                p.getEvs().get(Stats.ATTACK),
-                p.getEvs().get(Stats.DEFENCE),
-                p.getEvs().get(Stats.SPECIAL_ATTACK),
-                p.getEvs().get(Stats.SPECIAL_DEFENCE),
-                p.getEvs().get(Stats.SPEED)};
+    public static double getIVSPercentage(int decimalPlaces, Pokemon p) {
+        int total = 0;
+
+        for (Stats st : Stats.values()) {
+            if (st.equals(Stats.ACCURACY) || st.equals(Stats.EVASION))
+                continue;
+            if (p.getIvs().get(st) != null)
+                total += p.getIvs().getOrDefault(st);
+        }
+
+        double percentage = (double) total / 186.0D * 100.0D;
+        return Math.floor(percentage * Math.pow(10.0D, decimalPlaces)) / Math.pow(10.0D, decimalPlaces);
     }
 
     public static double getEVSPercentage(int decimalPlaces, Pokemon p) {
         int total = 0;
-        int[] evs = getEvsArray(p);
 
-        for (int evStat : evs) {
-            total += evStat;
+        for (Stats st : Stats.values()) {
+            if (st.equals(Stats.ACCURACY) || st.equals(Stats.EVASION))
+                continue;
+            if (p.getEvs().get(st) != null)
+                total += p.getEvs().getOrDefault(st);
         }
 
-        double percentage = (double)total / 510.0D * 100.0D;
+        double percentage = (double) total / 510.0D * 100.0D;
         return Math.floor(percentage * Math.pow(10.0D, decimalPlaces)) / Math.pow(10.0D, decimalPlaces);
     }
 
@@ -175,8 +189,15 @@ public class Util
         return sp;
     }
 
+    public static boolean isOnline(UUID uuid)
+    {
+        return server.getPlayerList().getPlayer(uuid) != null;
+    }
+
     public static void send(UUID uuid, String message) {
-        getPlayer(uuid).sendSystemMessage(Component.literal(((TextUtil.getMessagePrefix()).getString() + message).replaceAll("&([0-9a-fk-or])", "\u00a7$1")));
+        if (isOnline(uuid)) {
+            getPlayer(uuid).sendSystemMessage(Component.literal(((TextUtil.getMessagePrefix()).getString() + message).replaceAll("&([0-9a-fk-or])", "\u00a7$1")));
+        }
     }
 
     public static void send(CommandSource sender, String message) {

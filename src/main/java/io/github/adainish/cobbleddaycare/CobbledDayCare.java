@@ -1,14 +1,19 @@
 package io.github.adainish.cobbleddaycare;
 
 import ca.landonjw.gooeylibs2.api.tasks.Task;
+import io.github.adainish.cobbleddaycare.cmd.DayCareCommand;
 import io.github.adainish.cobbleddaycare.config.PenConfig;
 import io.github.adainish.cobbleddaycare.config.SpeciesConfig;
+import io.github.adainish.cobbleddaycare.listener.PlayerListener;
 import io.github.adainish.cobbleddaycare.obj.DayCareManager;
 import io.github.adainish.cobbleddaycare.storage.DayCareStorage;
 import io.github.adainish.cobbleddaycare.tasks.UpdatePensRunnable;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerLifecycleEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,6 +21,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -96,12 +102,29 @@ public class CobbledDayCare {
         );
     }
 
+
+    @SubscribeEvent
+    public void onCommandRegistry(RegisterCommandsEvent event) {
+
+        //register commands
+        event.getDispatcher().register(DayCareCommand.getCommand());
+
+    }
+
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event)
     {
+        setServer(ServerLifecycleHooks.getCurrentServer());
         reload();
+        MinecraftForge.EVENT_BUS.register(new PlayerListener());
+    }
 
+    @SubscribeEvent
+    public void onServerShutDown(ServerStoppingEvent event)
+    {
+        shutdownTasks();
+        dayCareStorage.save(manager);
     }
 
     public void initDirs() {
@@ -123,7 +146,7 @@ public class CobbledDayCare {
     public void initStorage()
     {
         if (dayCareStorage != null) {
-            dayCareStorage.save();
+            dayCareStorage.save(manager);
         } else {
             DayCareStorage.writeConfig();
             dayCareStorage = DayCareStorage.getConfig();
@@ -141,8 +164,8 @@ public class CobbledDayCare {
         }
     }
 
-    public void reload() {
-        initDirs();
+    public void shutdownTasks()
+    {
         if (!taskList.isEmpty())
         {
             getLog().warn("Shutting down old task data");
@@ -151,6 +174,11 @@ public class CobbledDayCare {
             }
             taskList.clear();
         }
+    }
+
+    public void reload() {
+        initDirs();
+        shutdownTasks();
         initConfigs();
 
         //load other data

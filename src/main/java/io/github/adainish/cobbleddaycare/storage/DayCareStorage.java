@@ -54,7 +54,7 @@ public class DayCareStorage
         return gson.fromJson(reader, DayCareStorage.class);
     }
 
-    public void save()
+    public void save(DayCareManager dayCareManager)
     {
         File dir = CobbledDayCare.getConfigDir();
         dir.mkdirs();
@@ -76,7 +76,7 @@ public class DayCareStorage
             }
             try {
                 FileWriter writer = new FileWriter(file);
-                writer.write(gson.toJson(this));
+                writer.write(gson.toJson(dayCareManager));
                 writer.close();
             } catch (IOException e) {
                 e.printStackTrace();

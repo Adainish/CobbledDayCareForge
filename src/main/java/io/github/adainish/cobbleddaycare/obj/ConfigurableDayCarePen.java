@@ -10,6 +10,8 @@ public class ConfigurableDayCarePen
 
     public String permissionID = "";
 
+    public boolean enabled = true;
+
     public ConfigurableDayCarePen(int i)
     {
         this.dayCareID = "pen_%i%".replace("%i%", String.valueOf(i));

@@ -1,5 +1,6 @@
 package io.github.adainish.cobbleddaycare.obj;
 
+import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.egg.EggGroup;
 import com.cobblemon.mod.common.pokeball.PokeBall;
@@ -12,9 +13,10 @@ import io.github.adainish.cobbleddaycare.CobbledDayCare;
 import io.github.adainish.cobbleddaycare.config.SpeciesConfig;
 import io.github.adainish.cobbleddaycare.util.RandomHelper;
 import io.github.adainish.cobbleddaycare.util.Util;
-import net.minecraftforge.server.permission.nodes.PermissionNode;
 
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DayCarePen
 {
@@ -28,9 +30,13 @@ public class DayCarePen
 
     public long lastEggAttempt = 0;
 
-    public double unlockCost;
+    public double unlockCost = 0;
 
-    public String permissionID;
+    public String permissionID = "";
+
+    public boolean unlocked = false;
+
+    public boolean enabled = true;
 
 
     public DayCarePen()
@@ -45,9 +51,25 @@ public class DayCarePen
         return timer;
     }
 
+    public String unlockStatus()
+    {
+        if (unlocked)
+            return "&aThis pen has been unlocked";
+        return "&cYou're yet to unlock this pen...";
+    }
+
     public boolean shouldGenerateEgg()
     {
         return System.currentTimeMillis() > (lastEggAttempt + TimeUnit.MINUTES.toMillis(getTimerFromSpecies(getParentOne(), getParentTwo())));
+    }
+
+    public boolean hasMove(Pokemon pokemon, String name)
+    {
+        AtomicBoolean val = new AtomicBoolean(false);
+        if (pokemon.getMoveSet().getMoves().stream().anyMatch(move -> move.getName().equalsIgnoreCase(name))) {
+            val.set(true);
+        }
+        return val.get();
     }
 
     public Egg generateEgg()
@@ -130,10 +152,12 @@ public class DayCarePen
             boolean shouldBeShiny = RandomHelper.getRandomChance(mother.shinyChance) || RandomHelper.getRandomChance(father.shinyChance);
             //ball;
             PokeBall pokeBall = femaleParent.getCaughtBall();
-            //nature
-
             //? no is hidden check, can't parse down HA checking
 
+            //nature
+            /**
+             * Ever stones still need to be implemented, nature generation will be random
+             */
             Nature nature = RandomHelper.getRandomElementFromCollection(Natures.INSTANCE.all());
             if (RandomHelper.getRandomChance(mother.natureChanceFemale)) {
                 nature = femaleParent.getNature();
@@ -141,9 +165,7 @@ public class DayCarePen
                 nature = maleParent.getNature();
 
 //        if (parentOne.heldItem().getItem().equals(CobblemonItems.EVER_STONE))
-            /**
-             * Ever stones still need to be implemented, nature generation will be random
-             */
+
             //size?
             //form generation
             //
@@ -152,6 +174,43 @@ public class DayCarePen
             if (nature != null) {
                 generated.setNature(nature);
             }
+
+            //moves
+            Pokemon finalFemaleParent = femaleParent;
+            Pokemon finalMaleParent = maleParent;
+            decidedSpecies.getMoves().getEggMoves().forEach(moveTemplate -> {
+                finalFemaleParent.getMoveSet().getMoves().forEach(move -> {
+                    if (move.getName().equalsIgnoreCase(moveTemplate.create().getName()))
+                    {
+                        //do chance roll
+                        if (RandomHelper.getRandomChance(mother.natureChanceFemale))
+                        {
+                            //add to moveset if not in moveset
+                            if (hasMove(generated, move.getName()))
+                                return;
+                            if (generated.getMoveSet().hasSpace()) {
+                                generated.getMoveSet().add(move);
+                            }
+                        }
+                    }
+                });
+
+                finalMaleParent.getMoveSet().getMoves().forEach(move -> {
+                    if (move.getName().equalsIgnoreCase(moveTemplate.create().getName()))
+                    {
+                        //do chance roll
+                        if (RandomHelper.getRandomChance(father.natureChanceFemale))
+                        {
+                            //add to moveset if not in moveset
+                            if (hasMove(generated, move.getName()))
+                                return;
+                            if (generated.getMoveSet().hasSpace()) {
+                                generated.getMoveSet().add(move);
+                            }
+                        }
+                    }
+                });
+            });
             generated.setShiny(shouldBeShiny);
             generated.setCaughtBall(pokeBall);
             return new Egg(generated);
@@ -172,11 +231,15 @@ public class DayCarePen
 
     public Pokemon getParentOne()
     {
+        if (pokemonOne == null)
+            return null;
         return new Pokemon().loadFromJSON(pokemonOne);
     }
 
     public Pokemon getParentTwo()
     {
+        if (pokemonTwo == null)
+            return null;
         return new Pokemon().loadFromJSON(pokemonTwo);
     }
 
