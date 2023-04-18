@@ -33,6 +33,7 @@ import java.util.List;
 @Mod(CobbledDayCare.MODID)
 public class CobbledDayCare {
 
+    public static CobbledDayCare instance;
     // Define mod id in a common place for everything to reference
     public static final String MODID = "cobbleddaycare";
     public static final String MOD_NAME = "CobbledDayCare";
@@ -49,6 +50,7 @@ public class CobbledDayCare {
     public List<Task> taskList = new ArrayList<>();
 
     public CobbledDayCare() {
+        instance = this;
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // Register the commonSetup method for modloading

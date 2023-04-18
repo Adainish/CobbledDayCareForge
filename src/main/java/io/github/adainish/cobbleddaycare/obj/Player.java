@@ -54,6 +54,17 @@ public class Player
         }
     }
 
+    public void updatePenStatus(String penName, boolean open)
+    {
+        for (Map.Entry<String, DayCarePen> entry : dayCarePens.entrySet()) {
+            String s = entry.getKey();
+            DayCarePen dayCarePen = entry.getValue();
+            if (s.equalsIgnoreCase(penName)) {
+                dayCarePen.updateLockStatus(open, this.uuid);
+                return;
+            }
+        }
+    }
 
     public void openUI(ServerPlayer serverPlayer)
     {

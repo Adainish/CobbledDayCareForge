@@ -15,6 +15,7 @@ import io.github.adainish.cobbleddaycare.util.RandomHelper;
 import io.github.adainish.cobbleddaycare.util.Util;
 
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -61,6 +62,21 @@ public class DayCarePen
     public boolean shouldGenerateEgg()
     {
         return System.currentTimeMillis() > (lastEggAttempt + TimeUnit.MINUTES.toMillis(getTimerFromSpecies(getParentOne(), getParentTwo())));
+    }
+
+    public void updateLockStatus(boolean unlocked, UUID uuid)
+    {
+        if (Util.isOnline(uuid))
+        {
+            String status = "&aunlock";
+            if (!unlocked)
+                status = "&4locked";
+            Util.send(uuid, "&7The daycare pen %pen% has been %status%"
+                    .replace("%pen%", dayCareID)
+                    .replace("%status%", status)
+            );
+        }
+        this.unlocked = unlocked;
     }
 
     public boolean hasMove(Pokemon pokemon, String name)
