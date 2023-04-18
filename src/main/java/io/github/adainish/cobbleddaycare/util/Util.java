@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import io.github.adainish.cobbleddaycare.CobbledDayCare;
 import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -200,7 +201,7 @@ public class Util
         }
     }
 
-    public static void send(CommandSource sender, String message) {
+    public static void send(CommandSourceStack sender, String message) {
         sender.sendSystemMessage(Component.literal(((TextUtil.getMessagePrefix()).getString() + message).replaceAll("&([0-9a-fk-or])", "\u00a7$1")));
     }
 
