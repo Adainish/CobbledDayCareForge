@@ -7,6 +7,7 @@ import io.github.adainish.cobbleddaycare.config.SpeciesConfig;
 import io.github.adainish.cobbleddaycare.listener.PlayerListener;
 import io.github.adainish.cobbleddaycare.obj.DayCareManager;
 import io.github.adainish.cobbleddaycare.storage.DayCareStorage;
+import io.github.adainish.cobbleddaycare.tasks.SaveManagerRunnable;
 import io.github.adainish.cobbleddaycare.tasks.UpdatePensRunnable;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
@@ -187,6 +188,7 @@ public class CobbledDayCare {
         initStorage();
 
         taskList.add(Task.builder().infinite().interval(20).execute(new UpdatePensRunnable()).build());
+        taskList.add(Task.builder().infinite().interval(20 * 60 * 10).execute(new SaveManagerRunnable()).build());
         //whatever other tasks
     }
 

@@ -48,8 +48,111 @@ public class DayCarePen
     public int getTimerFromSpecies(Pokemon parentOne, Pokemon parentTwo)
     {
         int timer = 1;
+        if (decideMother(parentOne, parentTwo) != null)
+        {
 
+        }
         return timer;
+    }
+
+    public BreedableSpecies decideFather(Pokemon parentOne, Pokemon parentTwo)
+    {
+        Pokemon femaleParent = null;
+        Pokemon maleParent = null;
+
+        if (parentOne.getGender().equals(Gender.MALE) && parentTwo.getGender().equals(Gender.MALE))
+            return null;
+        if (parentTwo.getGender().equals(Gender.FEMALE) && parentOne.getGender().equals(Gender.FEMALE))
+            return null;
+
+        switch (parentOne.getGender()) {
+            case FEMALE -> femaleParent = parentOne;
+            case MALE -> maleParent = parentOne;
+        }
+        switch (parentTwo.getGender()) {
+            case MALE -> maleParent = getParentTwo();
+            case FEMALE -> femaleParent = getParentTwo();
+        }
+
+        if (parentOne.getGender().equals(Gender.GENDERLESS) && parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            maleParent = parentOne;
+            femaleParent = parentTwo;
+        } else if (parentOne.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentOne;
+            if (maleParent == null)
+                maleParent = parentOne;
+        } else if (parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentTwo;
+            if (maleParent == null)
+                maleParent = parentTwo;
+        }
+
+        if (parentOne.isLegendary() || parentOne.isUltraBeast())
+            return null;
+        if (parentTwo.isLegendary() || parentTwo.isUltraBeast())
+            return null;
+
+        SpeciesConfig speciesConfig = CobbledDayCare.speciesConfig;
+        if (speciesConfig.speciesData.get(maleParent.getSpecies().getName()) != null || speciesConfig.speciesData.get(femaleParent.getSpecies().getName()) != null) {
+            return speciesConfig.speciesData.get(maleParent.getSpecies().getName());
+        }
+        return null;
+    }
+
+    public BreedableSpecies decideMother(Pokemon parentOne, Pokemon parentTwo)
+    {
+        Pokemon femaleParent = null;
+        Pokemon maleParent = null;
+
+        if (parentOne.getGender().equals(Gender.MALE) && parentTwo.getGender().equals(Gender.MALE))
+            return null;
+        if (parentTwo.getGender().equals(Gender.FEMALE) && parentOne.getGender().equals(Gender.FEMALE))
+            return null;
+
+        switch (parentOne.getGender()) {
+            case FEMALE -> femaleParent = parentOne;
+            case MALE -> maleParent = parentOne;
+        }
+        switch (parentTwo.getGender()) {
+            case MALE -> maleParent = getParentTwo();
+            case FEMALE -> femaleParent = getParentTwo();
+        }
+
+        if (parentOne.getGender().equals(Gender.GENDERLESS) && parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            maleParent = parentOne;
+            femaleParent = parentTwo;
+        } else if (parentOne.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentOne;
+            if (maleParent == null)
+                maleParent = parentOne;
+        } else if (parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentTwo;
+            if (maleParent == null)
+                maleParent = parentTwo;
+        }
+
+        if (parentOne.isLegendary() || parentOne.isUltraBeast())
+            return null;
+        if (parentTwo.isLegendary() || parentTwo.isUltraBeast())
+            return null;
+
+        SpeciesConfig speciesConfig = CobbledDayCare.speciesConfig;
+        if (speciesConfig.speciesData.get(maleParent.getSpecies().getName()) != null || speciesConfig.speciesData.get(femaleParent.getSpecies().getName()) != null) {
+            BreedableSpecies father = speciesConfig.speciesData.get(maleParent.getSpecies().getName());
+            BreedableSpecies mother = speciesConfig.speciesData.get(femaleParent.getSpecies().getName());
+            return mother;
+        }
+        return null;
     }
 
     public String unlockStatus()
@@ -88,6 +191,18 @@ public class DayCarePen
         return val.get();
     }
 
+    public Species getEarliestSpecies(Species species)
+    {
+        Species clonedDecision = species;
+        if (species.create(1).getPreEvolution() != null)
+        {
+            clonedDecision = species.create(1).getPreEvolution().getSpecies();
+            if (clonedDecision.create(1).getPreEvolution() != null)
+                clonedDecision = clonedDecision.create(1).getPreEvolution().getSpecies();
+        }
+        return clonedDecision;
+    }
+
     public Egg generateEgg()
     {
         lastEggAttempt = System.currentTimeMillis();
@@ -111,6 +226,24 @@ public class DayCarePen
             case FEMALE -> femaleParent = getParentTwo();
         }
 
+        if (parentOne.getGender().equals(Gender.GENDERLESS) && parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            maleParent = parentOne;
+            femaleParent = parentTwo;
+        } else if (parentOne.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentOne;
+            if (maleParent == null)
+                maleParent = parentOne;
+        } else if (parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentTwo;
+            if (maleParent == null)
+                maleParent = parentTwo;
+        }
+
         if (parentOne.isLegendary() || parentOne.isUltraBeast())
             return null;
         if (parentTwo.isLegendary() || parentTwo.isUltraBeast())
@@ -130,26 +263,35 @@ public class DayCarePen
             {
                 //check if ditto breeding is enabled
                 decidedSpecies = RandomHelper.getRandomElementFromCollection(Util.pokemonList());
-            } else
-                decidedSpecies = parentTwo.getSpecies();
+            } else {
+                if (parentTwo.getSpecies().create(1).getPreEvolution() != null) {
+                    decidedSpecies = parentTwo.getSpecies().create(1).getPreEvolution().getSpecies();
+                }
+                else decidedSpecies = parentTwo.getSpecies();
+            }
         } else if(parentTwo.getSpecies().equals(Util.getSpeciesFromString("ditto")))
         {
             if (parentOne.getSpecies().equals(parentTwo.getSpecies()))
             {
                 //check if ditto breeding is enabled
                 decidedSpecies = RandomHelper.getRandomElementFromCollection(Util.pokemonList());
-            } else
-                decidedSpecies = parentOne.getSpecies();
+            } else {
+                if (parentOne.getSpecies().create(1).getPreEvolution() != null) {
+                    decidedSpecies = parentOne.getSpecies().create(1).getPreEvolution().getSpecies();
+                }
+                else decidedSpecies = parentOne.getSpecies();
+            }
         } else {
               //check egg group compatibilities
             for (EggGroup eggGroup:parentOne.getSpecies().getEggGroups()) {
-                if (parentTwo.getSpecies().getEggGroups().contains(eggGroup))
-                {
+                if (parentTwo.getSpecies().getEggGroups().contains(eggGroup)) {
                     //decide female parent
                     if (femaleParent == null || maleParent == null)
                         return null;
                     //set species to female parent
-                    decidedSpecies = femaleParent.getSpecies();
+                    if (femaleParent.getPreEvolution() != null)
+                        decidedSpecies = femaleParent.getSpecies().create(1).getPreEvolution().getSpecies();
+                    else decidedSpecies = femaleParent.getSpecies();
                 }
             }
         }
@@ -229,7 +371,9 @@ public class DayCarePen
             });
             generated.setShiny(shouldBeShiny);
             generated.setCaughtBall(pokeBall);
-            return new Egg(generated);
+            Egg egg = new Egg(generated);
+            egg.hatchTime = Math.toIntExact(mother.hatchTimeMinutes);
+            return egg;
         } else
             return null;
     }

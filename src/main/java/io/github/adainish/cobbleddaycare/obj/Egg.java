@@ -32,7 +32,7 @@ public class Egg
 
     public boolean hasHatched()
     {
-        return System.currentTimeMillis() >= (System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(hatchTime));
+        return System.currentTimeMillis() >= (hatchStartedAt + TimeUnit.MINUTES.toMillis(hatchTime));
     }
 
     public Pokemon getGeneratedPokemon()
