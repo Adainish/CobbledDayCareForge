@@ -47,6 +47,9 @@ public class Player
                 if (pen.shouldGenerateEgg()) {
                     Egg egg = pen.generateEgg();
                     if (egg != null) {
+                        if (Util.isOnline(uuid)) {
+                            Util.send(uuid, "&7One of your pokemon generated an egg..");
+                        }
                         eggBox.eggList.add(egg);
                     }
                 }

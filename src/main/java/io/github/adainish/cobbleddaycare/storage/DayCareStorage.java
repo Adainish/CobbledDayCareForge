@@ -16,19 +16,20 @@ public class DayCareStorage
     {
         this.dayCareManager = new DayCareManager();
     }
-    public static void writeConfig()
+    public static void writeStorage()
     {
-        File dir = CobbledDayCare.getConfigDir();
+        File dir = CobbledDayCare.getStorage();
         dir.mkdirs();
         Gson gson  = Adapters.PRETTY_MAIN_GSON;
-        DayCareStorage config = new DayCareStorage();
+
         try {
             File file = new File(dir, "storage.json");
             if (file.exists())
                 return;
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
-            String json = gson.toJson(config);
+            DayCareStorage storage = new DayCareStorage();
+            String json = gson.toJson(storage);
             writer.write(json);
             writer.close();
         } catch (IOException e)
@@ -37,9 +38,9 @@ public class DayCareStorage
         }
     }
 
-    public static DayCareStorage getConfig()
+    public static DayCareStorage getStorage()
     {
-        File dir = CobbledDayCare.getConfigDir();
+        File dir = CobbledDayCare.getStorage();
         dir.mkdirs();
         Gson gson  = Adapters.PRETTY_MAIN_GSON;
         File file = new File(dir, "storage.json");
@@ -54,9 +55,9 @@ public class DayCareStorage
         return gson.fromJson(reader, DayCareStorage.class);
     }
 
-    public void save(DayCareManager dayCareManager)
+    public void save()
     {
-        File dir = CobbledDayCare.getConfigDir();
+        File dir = CobbledDayCare.getStorage();
         dir.mkdirs();
         Gson gson  = Adapters.PRETTY_MAIN_GSON;
         File file = new File(dir, "storage.json");
@@ -65,7 +66,6 @@ public class DayCareStorage
             try {
                 reader = new JsonReader(new FileReader(file));
             } catch (FileNotFoundException e) {
-
 
             }
 
@@ -76,7 +76,7 @@ public class DayCareStorage
             }
             try {
                 FileWriter writer = new FileWriter(file);
-                writer.write(gson.toJson(dayCareManager));
+                writer.write(gson.toJson(this));
                 writer.close();
             } catch (IOException e) {
                 e.printStackTrace();

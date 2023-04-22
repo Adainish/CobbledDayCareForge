@@ -1,5 +1,10 @@
 package io.github.adainish.cobbleddaycare.obj;
 
+import com.cobblemon.mod.common.api.pokemon.stats.Stat;
+import com.cobblemon.mod.common.api.pokemon.stats.Stats;
+
+import java.util.HashMap;
+
 public class BreedableSpecies
 {
     public String species;
@@ -14,6 +19,7 @@ public class BreedableSpecies
     public long hatchTimeMinutes;
     public long breedingTimeMinutes;
 
+    public HashMap<String, BreedableStat> breedableStats;
 
     public BreedableSpecies(String species)
     {
@@ -26,6 +32,15 @@ public class BreedableSpecies
         this.haChanceFemale = 5D;
         this.hatchTimeMinutes = 5;
         this.breedingTimeMinutes = 20;
+        this.breedableStats = new HashMap<>();
+        for (Stat st: Stats.values()) {
+            if (st.equals(Stats.ACCURACY) || st.equals(Stats.EVASION))
+                continue;
+            BreedableStat breedableStat = new BreedableStat();
+            breedableStat.statName = st.getIdentifier().toString();
+            breedableStat.chance = 0.5;
+            breedableStats.put(st.getIdentifier().toString(), breedableStat);
+        }
     }
 
 }

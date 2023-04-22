@@ -3,6 +3,8 @@ package io.github.adainish.cobbleddaycare.obj;
 import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.egg.EggGroup;
+import com.cobblemon.mod.common.api.pokemon.stats.Stat;
+import com.cobblemon.mod.common.api.pokemon.stats.Stats;
 import com.cobblemon.mod.common.pokeball.PokeBall;
 import com.cobblemon.mod.common.pokemon.Gender;
 import com.cobblemon.mod.common.pokemon.Nature;
@@ -14,6 +16,8 @@ import io.github.adainish.cobbleddaycare.config.SpeciesConfig;
 import io.github.adainish.cobbleddaycare.util.RandomHelper;
 import io.github.adainish.cobbleddaycare.util.Util;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -24,9 +28,6 @@ public class DayCarePen
     public String dayCareID;
     public JsonObject pokemonOne;
     public JsonObject pokemonTwo;
-
-    public int coolDownMinutes = 5;
-    public int eggCoolDown = 5;
     public long lastStart = 0;
 
     public long lastEggAttempt = 0;
@@ -45,12 +46,13 @@ public class DayCarePen
 
     }
 
-    public int getTimerFromSpecies(Pokemon parentOne, Pokemon parentTwo)
+    public int getTimerFromSpecies(BreedableSpecies mother)
     {
         int timer = 1;
-        if (decideMother(parentOne, parentTwo) != null)
-        {
-
+        if (mother != null) {
+            timer = (int) mother.breedingTimeMinutes;
+        } else {
+            CobbledDayCare.getLog().error("Failed to verify mother status, unable to decide breed timer.");
         }
         return timer;
     }
@@ -148,9 +150,7 @@ public class DayCarePen
 
         SpeciesConfig speciesConfig = CobbledDayCare.speciesConfig;
         if (speciesConfig.speciesData.get(maleParent.getSpecies().getName()) != null || speciesConfig.speciesData.get(femaleParent.getSpecies().getName()) != null) {
-            BreedableSpecies father = speciesConfig.speciesData.get(maleParent.getSpecies().getName());
-            BreedableSpecies mother = speciesConfig.speciesData.get(femaleParent.getSpecies().getName());
-            return mother;
+            return speciesConfig.speciesData.get(femaleParent.getSpecies().getName());
         }
         return null;
     }
@@ -164,14 +164,14 @@ public class DayCarePen
 
     public boolean shouldGenerateEgg()
     {
-        return System.currentTimeMillis() > (lastEggAttempt + TimeUnit.MINUTES.toMillis(getTimerFromSpecies(getParentOne(), getParentTwo())));
+        return System.currentTimeMillis() > (lastEggAttempt + TimeUnit.MINUTES.toMillis(getTimerFromSpecies(decideMother(getParentOne(), getParentTwo()))));
     }
 
     public void updateLockStatus(boolean unlocked, UUID uuid)
     {
         if (Util.isOnline(uuid))
         {
-            String status = "&aunlock";
+            String status = "&aunlocked";
             if (!unlocked)
                 status = "&4locked";
             Util.send(uuid, "&7The daycare pen %pen% has been %status%"
@@ -193,6 +193,8 @@ public class DayCarePen
 
     public Species getEarliestSpecies(Species species)
     {
+        if (species == null)
+            return null;
         Species clonedDecision = species;
         if (species.create(1).getPreEvolution() != null)
         {
@@ -203,52 +205,8 @@ public class DayCarePen
         return clonedDecision;
     }
 
-    public Egg generateEgg()
+    public Species getDecidedSpecies(Pokemon parentOne, Pokemon parentTwo, Pokemon femaleParent, Pokemon maleParent)
     {
-        lastEggAttempt = System.currentTimeMillis();
-        Pokemon femaleParent = null;
-        Pokemon maleParent = null;
-
-        Pokemon parentOne = getParentOne();
-        Pokemon parentTwo = getParentTwo();
-
-        if (parentOne.getGender().equals(Gender.MALE) && parentTwo.getGender().equals(Gender.MALE))
-            return null;
-        if (parentTwo.getGender().equals(Gender.FEMALE) && parentOne.getGender().equals(Gender.FEMALE))
-            return null;
-
-        switch (parentOne.getGender()) {
-            case FEMALE -> femaleParent = parentOne;
-            case MALE -> maleParent = parentOne;
-        }
-        switch (parentTwo.getGender()) {
-            case MALE -> maleParent = getParentTwo();
-            case FEMALE -> femaleParent = getParentTwo();
-        }
-
-        if (parentOne.getGender().equals(Gender.GENDERLESS) && parentTwo.getGender().equals(Gender.GENDERLESS))
-        {
-            maleParent = parentOne;
-            femaleParent = parentTwo;
-        } else if (parentOne.getGender().equals(Gender.GENDERLESS))
-        {
-            if (femaleParent == null)
-                femaleParent = parentOne;
-            if (maleParent == null)
-                maleParent = parentOne;
-        } else if (parentTwo.getGender().equals(Gender.GENDERLESS))
-        {
-            if (femaleParent == null)
-                femaleParent = parentTwo;
-            if (maleParent == null)
-                maleParent = parentTwo;
-        }
-
-        if (parentOne.isLegendary() || parentOne.isUltraBeast())
-            return null;
-        if (parentTwo.isLegendary() || parentTwo.isUltraBeast())
-            return null;
-
         Species decidedSpecies = null;
         if (parentOne.getGender().equals(parentTwo.getGender()))
         {
@@ -282,7 +240,7 @@ public class DayCarePen
                 else decidedSpecies = parentOne.getSpecies();
             }
         } else {
-              //check egg group compatibilities
+            //check egg group compatibilities
             for (EggGroup eggGroup:parentOne.getSpecies().getEggGroups()) {
                 if (parentTwo.getSpecies().getEggGroups().contains(eggGroup)) {
                     //decide female parent
@@ -295,6 +253,70 @@ public class DayCarePen
                 }
             }
         }
+        return getEarliestSpecies(decidedSpecies);
+    }
+
+    public Pokemon decideParent(Pokemon parentOne, Pokemon parentTwo, boolean mother)
+    {
+        Pokemon femaleParent = null;
+        Pokemon maleParent = null;
+        if (parentOne.getGender().equals(Gender.MALE) && parentTwo.getGender().equals(Gender.MALE))
+            return null;
+        if (parentTwo.getGender().equals(Gender.FEMALE) && parentOne.getGender().equals(Gender.FEMALE))
+            return null;
+
+        switch (parentOne.getGender()) {
+            case FEMALE -> femaleParent = parentOne;
+            case MALE -> maleParent = parentOne;
+        }
+        switch (parentTwo.getGender()) {
+            case MALE -> maleParent = getParentTwo();
+            case FEMALE -> femaleParent = getParentTwo();
+        }
+
+        if (parentOne.getGender().equals(Gender.GENDERLESS) && parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            maleParent = parentOne;
+            femaleParent = parentTwo;
+        } else if (parentOne.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentOne;
+            if (maleParent == null)
+                maleParent = parentOne;
+        } else if (parentTwo.getGender().equals(Gender.GENDERLESS))
+        {
+            if (femaleParent == null)
+                femaleParent = parentTwo;
+            if (maleParent == null)
+                maleParent = parentTwo;
+        }
+        if (mother)
+            return femaleParent;
+        else if (!mother)
+            return maleParent;
+        return null;
+    }
+
+    public Egg generateEgg()
+    {
+        lastEggAttempt = System.currentTimeMillis();
+        Pokemon femaleParent = null;
+        Pokemon maleParent = null;
+
+        Pokemon parentOne = getParentOne();
+        Pokemon parentTwo = getParentTwo();
+
+        if (parentOne.getGender().equals(Gender.MALE) && parentTwo.getGender().equals(Gender.MALE))
+            return null;
+        if (parentTwo.getGender().equals(Gender.FEMALE) && parentOne.getGender().equals(Gender.FEMALE))
+            return null;
+
+        femaleParent = decideParent(parentOne, parentTwo, true);
+        maleParent = decideParent(parentOne, parentTwo, false);
+
+        Species decidedSpecies = getDecidedSpecies(parentOne, parentTwo, femaleParent, maleParent);
+
         if (decidedSpecies == null)
             return null;
         SpeciesConfig speciesConfig = CobbledDayCare.speciesConfig;
@@ -369,6 +391,11 @@ public class DayCarePen
                     }
                 });
             });
+            HashMap<String, Integer> breedableStats = generatedStats(finalMaleParent, finalFemaleParent, father, mother);
+            if (!breedableStats.isEmpty())
+            {
+                Arrays.stream(Stats.values()).filter(stat -> !stat.equals(Stats.EVASION) && !stat.equals(Stats.ACCURACY)).filter(stat -> breedableStats.containsKey(stat.getIdentifier().toString())).forEach(stat -> generated.getIvs().set(stat, breedableStats.get(stat.getIdentifier().toString())));
+            }
             generated.setShiny(shouldBeShiny);
             generated.setCaughtBall(pokeBall);
             Egg egg = new Egg(generated);
@@ -378,10 +405,18 @@ public class DayCarePen
             return null;
     }
 
-    public boolean breedingOnCoolDown()
+    public HashMap<String, Integer> generatedStats(Pokemon dad, Pokemon mom, BreedableSpecies father, BreedableSpecies mother)
     {
+        HashMap<String, Integer> breedableStatHashMap = new HashMap<>();
 
-        return false;
+        Arrays.stream(Stats.values()).filter(stat -> !stat.equals(Stats.EVASION) && !stat.equals(Stats.ACCURACY)).forEach(stat -> {
+            if (RandomHelper.getRandomChance(father.breedableStats.get(stat.getIdentifier().toString()).chance)) {
+                breedableStatHashMap.put(stat.getIdentifier().toString(), dad.getIvs().getOrDefault(stat));
+            } else if (RandomHelper.getRandomChance(mother.breedableStats.get(stat.getIdentifier().toString()).chance)) {
+                breedableStatHashMap.put(stat.getIdentifier().toString(), mom.getIvs().getOrDefault(stat));
+            }
+        });
+        return breedableStatHashMap;
     }
 
     public void startBreeding()

@@ -3,8 +3,6 @@ package io.github.adainish.cobbleddaycare.obj;
 public class ConfigurableDayCarePen
 {
     public String dayCareID = "pen";
-    public int coolDownMinutes = 5;
-    public int eggCoolDown = 5;
 
     public double unlockCost = 100;
 

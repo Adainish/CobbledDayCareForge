@@ -30,8 +30,6 @@ public class DayCareManager
                 configurableDayCarePen = penDataMap.get(idString);
             if (configurableDayCarePen != null)
             {
-                dayCarePen.coolDownMinutes = configurableDayCarePen.coolDownMinutes;
-                dayCarePen.eggCoolDown = configurableDayCarePen.eggCoolDown;
                 dayCarePen.unlockCost = configurableDayCarePen.unlockCost;
                 dayCarePen.permissionID = configurableDayCarePen.permissionID;
                 dayCarePen.enabled = configurableDayCarePen.enabled;
@@ -47,9 +45,7 @@ public class DayCareManager
             DayCarePen dayCarePen = new DayCarePen();
             dayCarePen.dayCareID = configurableDayCarePen.dayCareID;
             dayCarePen.unlockCost = configurableDayCarePen.unlockCost;
-            dayCarePen.eggCoolDown = configurableDayCarePen.eggCoolDown;
             dayCarePen.permissionID = configurableDayCarePen.permissionID;
-            dayCarePen.coolDownMinutes = configurableDayCarePen.coolDownMinutes;
             player.dayCarePens.put(stringID, dayCarePen);
             this.playerData.put(player.uuid, player);
         });

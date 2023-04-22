@@ -12,7 +12,6 @@ import io.github.adainish.cobbleddaycare.tasks.UpdatePensRunnable;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.server.ServerLifecycleEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -127,7 +126,7 @@ public class CobbledDayCare {
     public void onServerShutDown(ServerStoppingEvent event)
     {
         shutdownTasks();
-        dayCareStorage.save(manager);
+        dayCareStorage.save();
     }
 
     public void initDirs() {
@@ -149,10 +148,10 @@ public class CobbledDayCare {
     public void initStorage()
     {
         if (dayCareStorage != null) {
-            dayCareStorage.save(manager);
+            dayCareStorage.save();
         } else {
-            DayCareStorage.writeConfig();
-            dayCareStorage = DayCareStorage.getConfig();
+            DayCareStorage.writeStorage();
+            dayCareStorage = DayCareStorage.getStorage();
         }
 
         if (dayCareStorage != null) {
