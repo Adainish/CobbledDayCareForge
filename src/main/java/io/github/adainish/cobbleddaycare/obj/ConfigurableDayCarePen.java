@@ -4,6 +4,8 @@ public class ConfigurableDayCarePen
 {
     public String dayCareID = "pen";
 
+    public int order = 0;
+
     public double unlockCost = 100;
 
     public String permissionID = "";
@@ -13,5 +15,6 @@ public class ConfigurableDayCarePen
     public ConfigurableDayCarePen(int i)
     {
         this.dayCareID = "pen_%i%".replace("%i%", String.valueOf(i));
+        this.order = i;
     }
 }

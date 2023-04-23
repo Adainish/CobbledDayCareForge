@@ -3,6 +3,7 @@ package io.github.adainish.cobbleddaycare.util;
 import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
 import com.cobblemon.mod.common.api.pokemon.stats.Stats;
+import com.cobblemon.mod.common.api.properties.CustomPokemonProperty;
 import com.cobblemon.mod.common.item.PokemonItem;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
@@ -111,6 +112,11 @@ public class Util
         return am;
     }
 
+//    public static boolean isUnbreedable(Pokemon pokemon)
+//    {
+//        Cu
+//        return pokemon.getCustomProperties().add(CustomPokemonProperty.DefaultImpls)
+//    }
     public static ArrayList<String> pokemonLore(Pokemon p) {
         ArrayList<String> list = new ArrayList<>();
         list.add("&7Ball:&e " + p.getCaughtBall().getName().getPath().replace("_", " "));

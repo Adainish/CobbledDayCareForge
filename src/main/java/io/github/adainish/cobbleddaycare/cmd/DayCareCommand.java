@@ -1,6 +1,5 @@
 package io.github.adainish.cobbleddaycare.cmd;
 
-import ca.landonjw.gooeylibs2.api.UIManager;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.adainish.cobbleddaycare.CobbledDayCare;

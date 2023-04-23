@@ -100,7 +100,9 @@ public class Player
     public List<Button> penButtons()
     {
         List<Button> gooeyButtons = new ArrayList<>();
-        dayCarePens.forEach((s, dayCarePen) -> {
+        List<DayCarePen> sortedPens = new ArrayList<>(dayCarePens.values());
+        sortedPens.sort(Comparator.comparing(DayCarePen::getOrder));
+        sortedPens.forEach(dayCarePen -> {
             if (dayCarePen.enabled) {
                 GooeyButton button = GooeyButton.builder()
                         .title(Util.formattedString("&b%penname%".replace("%penname%", dayCarePen.dayCareID)))
