@@ -46,9 +46,10 @@ public class DayCarePen
 
     }
 
-    public int getOrder()
-    {
-        return CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.get(dayCareID).order;
+    public int getOrder() {
+        if (CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.containsKey(dayCareID))
+            return CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.get(dayCareID).order;
+        else return 0;
     }
 
     public int getTimerFromSpecies(BreedableSpecies mother)

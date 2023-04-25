@@ -15,6 +15,7 @@ import com.cobblemon.mod.common.CobblemonItems;
 import com.cobblemon.mod.common.api.storage.NoPokemonStoreException;
 import com.cobblemon.mod.common.api.storage.party.PartyStore;
 import com.google.gson.JsonObject;
+import io.github.adainish.cobbleddaycare.CobbledDayCare;
 import io.github.adainish.cobbleddaycare.util.Util;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -100,7 +101,13 @@ public class Player
     public List<Button> penButtons()
     {
         List<Button> gooeyButtons = new ArrayList<>();
-        List<DayCarePen> sortedPens = new ArrayList<>(dayCarePens.values());
+        List<DayCarePen> sortedPens = new ArrayList<>();
+        dayCarePens.values().forEach(dayCarePen -> {
+            if (CobbledDayCare.manager.penDataMap.containsKey(dayCarePen.dayCareID) && dayCarePen.enabled)
+            {
+                sortedPens.add(dayCarePen);
+            }
+        });
         sortedPens.sort(Comparator.comparing(DayCarePen::getOrder));
         sortedPens.forEach(dayCarePen -> {
             if (dayCarePen.enabled) {
