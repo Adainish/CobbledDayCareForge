@@ -16,6 +16,7 @@ import com.cobblemon.mod.common.api.storage.NoPokemonStoreException;
 import com.cobblemon.mod.common.api.storage.party.PartyStore;
 import com.google.gson.JsonObject;
 import io.github.adainish.cobbleddaycare.CobbledDayCare;
+import io.github.adainish.cobbleddaycare.property.BreedCapabilityProperty;
 import io.github.adainish.cobbleddaycare.util.Util;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -90,7 +91,7 @@ public class Player
                 stack = Util.returnIcon(egg.getGeneratedPokemon());
             GooeyButton button = GooeyButton.builder()
                     .title(Util.formattedString("&bPokemon Egg"))
-                    .lore(Util.formattedArrayList(Arrays.asList("%status%".replace("%status%", egg.hatchedStatus()))))
+                    .lore(Util.formattedArrayList(List.of("%status%".replace("%status%", egg.hatchedStatus()))))
                     .display(stack)
                     .build();
             gooeyButtons.add(button);
@@ -112,8 +113,8 @@ public class Player
         sortedPens.forEach(dayCarePen -> {
             if (dayCarePen.enabled) {
                 GooeyButton button = GooeyButton.builder()
-                        .title(Util.formattedString("&b%penname%".replace("%penname%", dayCarePen.dayCareID)))
-                        .lore(Util.formattedArrayList(Arrays.asList("" + dayCarePen.unlockStatus())))
+                        .title(Util.formattedString("&b%penname%".replace("%penname%", dayCarePen.getPrettyDisplay())))
+                        .lore(Util.formattedArrayList(Collections.singletonList(dayCarePen.unlockStatus())))
                         .display(new ItemStack(CobblemonItems.LINK_CABLE.get().asItem()))
                         .onClick(b -> {
                             if (dayCarePen.unlocked) {
@@ -153,22 +154,24 @@ public class Player
                             .lore(Util.formattedArrayList(Util.pokemonLore(pokemon)))
                             .display(Util.returnIcon(pokemon))
                             .onClick(b -> {
-                                if (parentOne) {
-                                    if (dayCarePen.pokemonOne != null)
-                                    {
-                                        //send to player storage
-                                        finalPartyStore1.add(dayCarePen.getParentOne());
+                                if (new BreedCapabilityProperty().isBreedAble(pokemon)) {
+                                    if (parentOne) {
+                                        if (dayCarePen.pokemonOne != null) {
+                                            //send to player storage
+                                            finalPartyStore1.add(dayCarePen.getParentOne());
+                                        }
+                                        dayCarePen.pokemonOne = pokemon.saveToJSON(new JsonObject());
+                                        finalPartyStore1.remove(pokemon);
+                                    } else {
+                                        if (dayCarePen.pokemonTwo != null) {
+                                            //send to player storage
+                                            finalPartyStore1.add(dayCarePen.getParentTwo());
+                                        }
+                                        dayCarePen.pokemonTwo = pokemon.saveToJSON(new JsonObject());
+                                        finalPartyStore1.remove(pokemon);
                                     }
-                                    dayCarePen.pokemonOne = pokemon.saveToJSON(new JsonObject());
-                                    finalPartyStore1.remove(pokemon);
-                                }  else {
-                                    if (dayCarePen.pokemonTwo != null)
-                                    {
-                                        //send to player storage
-                                        finalPartyStore1.add(dayCarePen.getParentTwo());
-                                    }
-                                    dayCarePen.pokemonTwo = pokemon.saveToJSON(new JsonObject());
-                                    finalPartyStore1.remove(pokemon);
+                                } else {
+                                    Util.send(b.getPlayer().getUUID(), "&cThis pokemon is not breedable!");
                                 }
                                 UIManager.openUIForcefully(b.getPlayer(), viewPenUI(dayCarePen));
                             })
@@ -238,17 +241,13 @@ public class Player
         GooeyButton parentOne = GooeyButton.builder()
                 .title(Util.formattedString(parentOneTitle))
                 .display(parentOneStack)
-                .onClick(buttonAction -> {
-                    UIManager.openUIForcefully(buttonAction.getPlayer(), selectParentUI(dayCarePen, true));
-                })
+                .onClick(buttonAction -> UIManager.openUIForcefully(buttonAction.getPlayer(), selectParentUI(dayCarePen, true)))
                 .build();
 
         GooeyButton parentTwo = GooeyButton.builder()
                 .title(Util.formattedString(parentTwoTitle))
                 .display(parentTwoStack)
-                .onClick(buttonAction -> {
-                    UIManager.openUIForcefully(buttonAction.getPlayer(), selectParentUI(dayCarePen, false));
-                })
+                .onClick(buttonAction -> UIManager.openUIForcefully(buttonAction.getPlayer(), selectParentUI(dayCarePen, false)))
                 .build();
         builder.set(0, 0, goBack);
         builder.set(1, 3, parentOne);
@@ -309,9 +308,7 @@ public class Player
         GooeyButton viewEggBox = GooeyButton.builder()
                 .title(Util.formattedString("&bEgg Box"))
                 .display(new ItemStack(Items.EGG))
-                .onClick(b -> {
-                    UIManager.openUIForcefully(b.getPlayer(), eggBoxUI());
-                })
+                .onClick(b -> UIManager.openUIForcefully(b.getPlayer(), eggBoxUI()))
                 .build();
 
         builder.set(0, 3, previous)

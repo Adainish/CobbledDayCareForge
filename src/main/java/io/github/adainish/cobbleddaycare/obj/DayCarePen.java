@@ -1,9 +1,7 @@
 package io.github.adainish.cobbleddaycare.obj;
 
-import com.cobblemon.mod.common.api.moves.Move;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.egg.EggGroup;
-import com.cobblemon.mod.common.api.pokemon.stats.Stat;
 import com.cobblemon.mod.common.api.pokemon.stats.Stats;
 import com.cobblemon.mod.common.pokeball.PokeBall;
 import com.cobblemon.mod.common.pokemon.Gender;
@@ -18,7 +16,6 @@ import io.github.adainish.cobbleddaycare.util.Util;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,6 +47,14 @@ public class DayCarePen
         if (CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.containsKey(dayCareID))
             return CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.get(dayCareID).order;
         else return 0;
+    }
+
+    public String getPrettyDisplay()
+    {
+        String s = "";
+        if (CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.containsKey(dayCareID))
+            s = CobbledDayCare.dayCareStorage.dayCareManager.penDataMap.get(dayCareID).prettyDisplay;
+        return s;
     }
 
     public int getTimerFromSpecies(BreedableSpecies mother)
@@ -180,8 +185,8 @@ public class DayCarePen
             String status = "&aunlocked";
             if (!unlocked)
                 status = "&4locked";
-            Util.send(uuid, "&7The daycare pen %pen% has been %status%"
-                    .replace("%pen%", dayCareID)
+            Util.send(uuid, "&7The daycare pen %pen% &7has been %status%"
+                    .replace("%pen%", getPrettyDisplay())
                     .replace("%status%", status)
             );
         }
@@ -299,9 +304,7 @@ public class DayCarePen
         }
         if (mother)
             return femaleParent;
-        else if (!mother)
-            return maleParent;
-        return null;
+        else return maleParent;
     }
 
     public Egg generateEgg()
