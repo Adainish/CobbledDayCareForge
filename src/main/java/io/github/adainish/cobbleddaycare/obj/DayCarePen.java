@@ -321,8 +321,15 @@ public class DayCarePen
         if (parentTwo.getGender().equals(Gender.FEMALE) && parentOne.getGender().equals(Gender.FEMALE))
             return null;
 
+
+
         femaleParent = decideParent(parentOne, parentTwo, true);
         maleParent = decideParent(parentOne, parentTwo, false);
+
+        if (femaleParent == null)
+            return null;
+        if (maleParent == null)
+            return null;
 
         Species decidedSpecies = getDecidedSpecies(parentOne, parentTwo, femaleParent, maleParent);
 
@@ -332,6 +339,10 @@ public class DayCarePen
         if (speciesConfig.speciesData.get(maleParent.getSpecies().getName()) != null || speciesConfig.speciesData.get(femaleParent.getSpecies().getName()) != null) {
             BreedableSpecies father = speciesConfig.speciesData.get(maleParent.getSpecies().getName());
             BreedableSpecies mother = speciesConfig.speciesData.get(femaleParent.getSpecies().getName());
+            if (father == null)
+                return null;
+            if (mother == null)
+                return null;
             int lvl = 1;
             //ivs data
             /**
@@ -417,6 +428,8 @@ public class DayCarePen
     public HashMap<String, Integer> generatedStats(Pokemon dad, Pokemon mom, BreedableSpecies father, BreedableSpecies mother)
     {
         HashMap<String, Integer> breedableStatHashMap = new HashMap<>();
+        if (dad == null || mom == null || father == null || mother == null)
+            return breedableStatHashMap;
 
         Arrays.stream(Stats.values()).filter(stat -> !stat.equals(Stats.EVASION) && !stat.equals(Stats.ACCURACY)).forEach(stat -> {
             if (RandomHelper.getRandomChance(father.breedableStats.get(stat.getIdentifier().toString()).chance)) {
