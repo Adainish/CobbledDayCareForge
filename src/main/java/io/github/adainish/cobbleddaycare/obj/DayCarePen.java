@@ -63,7 +63,7 @@ public class DayCarePen
         if (mother != null) {
             timer = (int) mother.breedingTimeMinutes;
         } else {
-            CobbledDayCare.getLog().error("Failed to verify mother status, unable to decide breed timer.");
+//            CobbledDayCare.getLog().error("Failed to verify mother status, unable to decide breed timer.");
         }
         return timer;
     }
